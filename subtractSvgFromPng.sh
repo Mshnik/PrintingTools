@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Check if correct number of arguments are provided
+if [ "$#" -ne 3 ]; then
+    echo "Usage: $0 <input_directory> <svg_suffix> <output_directory>"
+    exit 1
+fi
+
+# Convert to absolute paths to avoid issues with relative path navigation
+INPUT_DIR=$(cd "$1" && pwd)
+SVG_SUFFIX="$2"
+OUTPUT_DIR=$(mkdir -p "$3" && cd "$3" && pwd)
+
+# Find all .png files in subdirectories
+find "$INPUT_DIR" -type f -name "*.png" | while read -r png_file; do
+    
+    # Get the directory containing the current png
+    current_subdir=$(dirname "$png_file")
+    
+    # Calculate the relative path from the INPUT_DIR
+    # This turns /Users/me/in/folder1/file.png into folder1
+    relative_path="${current_subdir#$INPUT_DIR/}"
+    
+    # If the file is in the root of INPUT_DIR, relative_path might equal INPUT_DIR
+    # We check to make sure we don't create a loop
+    if [ "$relative_path" == "$INPUT_DIR" ]; then relative_path="."; fi
+
+    # Define the target directory and create it
+    target_dir="$OUTPUT_DIR/$relative_path"
+    mkdir -p "$target_dir"
+
+    # Get the base name (without extension)
+    base_path="${png_file%.*}"
+    svg_file="${base_path}${SVG_SUFFIX}.svg"
+    
+    # Check if the matching .svg exists
+    if [ -f "$svg_file" ]; then
+        filename=$(basename "$base_path")
+        mask_file="$target_dir/${filename}_mask.png"
+        output_file="$target_dir/${filename}.png"
+        
+        echo "Processing: $relative_path/$filename"
+
+        # Create mask png.
+        magick -background None "$svg_file" \
+            -fill "#000000" +opaque none \
+            -resize $(identify -format %wx%h "$png_file") \
+            "$mask_file"
+
+        # Write finished file.
+        magick composite "$mask_file" "$png_file" "$output_file"
+
+        # remove mask file.
+        rm "$mask_file"
+    else
+        echo "Warning: No matching SVG found for $png_file"
+    fi
+done
+
+echo "Done! Results are in $OUTPUT_DIR"
