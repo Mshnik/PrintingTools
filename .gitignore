@@ -1,4 +1,7 @@
+
+
 # Image files
+work_pipeline/**
 **/*.tif
 
 # Mac OS Temp
