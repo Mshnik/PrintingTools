@@ -1,0 +1,5 @@
+# Image files
+**/*.tif
+
+# Mac OS Temp
+**/.DS_Store
