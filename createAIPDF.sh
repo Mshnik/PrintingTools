@@ -4,7 +4,8 @@
 INPUT_DIR=$(realpath "$1")
 OUTPUT_DIR=$(realpath "$2")
 TEMPLATE_PATH=$(realpath "$3")
-CORE_JSX=$(realpath "CombineLayersToPdf.jsx")
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CORE_JSX="$SCRIPT_DIR/CombineLayersToPdf.jsx"
 TEMP_JSX="${CORE_JSX}_tmp.jsx"
 
 # 2. Open the template in Illustrator

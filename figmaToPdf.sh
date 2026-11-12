@@ -44,7 +44,8 @@ echo " Starting Print-Ready CMYK PDF Compilation Pipeline"
 echo " Timestamp: $(date)"
 echo "================================================================="
 
-UTILS_DIRECTORY="/Users/michaelpatashnik/Utilities"
+# Dynamically resolve the directory where figmaToPdf.sh is located
+UTILS_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- Step 0: Dependency Verification ---
 echo -e "\n>> Step 0: Checking Environment & Script Availability..."
