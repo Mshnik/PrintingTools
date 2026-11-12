@@ -9,14 +9,31 @@ ACTUAL_PDF="$TEST_OUTPUT_DIR/ConversionTest_output.pdf"
 MAIN_SCRIPT="./figmaToPdf.sh"
 
 UPDATE_GOLDEN=false
+NO_CLEANUP=false
 
-# Cleanup function to remove temporary test artifacts
+# Parse arguments
+for arg in "$@"; do
+    case $arg in
+        --update)
+            UPDATE_GOLDEN=true
+            ;;
+        --no-cleanup)
+            NO_CLEANUP=true
+            ;;
+    esac
+done
+
+# Cleanup function to remove temporary test artifacts unless suppressed
 cleanup() {
-    echo -e "\n-> Cleaning up test workspace ($TEST_OUTPUT_DIR)..."
-    rm -rf "$TEST_OUTPUT_DIR"
+    if [ "$NO_CLEANUP" = true ]; then
+        echo -e "\n-> [--no-cleanup flag active] Preserving test workspace at '$TEST_OUTPUT_DIR'."
+    else
+        echo -e "\n-> Cleaning up test workspace ($TEST_OUTPUT_DIR)..."
+        rm -rf "$TEST_OUTPUT_DIR"
+    fi
 }
 
-# Trap exits, errors, and interruptions (Ctrl+C) to guarantee cleanup runs
+# Trap exits, errors, and interruptions (Ctrl+C) to guarantee cleanup runs appropriately
 trap cleanup EXIT INT TERM
 
 # Initial cleanup at the start in case a previous run was aborted midway
@@ -24,16 +41,6 @@ if [ -d "$TEST_OUTPUT_DIR" ]; then
     echo "-> Pre-run cleanup: Removing stale test outputs..."
     rm -rf "$TEST_OUTPUT_DIR"
 fi
-
-# Parse arguments
-for arg in "$@"; do
-    case $arg in
-        --update)
-            UPDATE_GOLDEN=true
-            shift
-            ;;
-    esac
-done
 
 echo "================================================================="
 echo " Starting PrintingTools Test Suite"

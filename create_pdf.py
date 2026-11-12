@@ -1,13 +1,9 @@
-# pvenv
-# pip install img2pdf pypdf pillow natsort
-# python create_pdf.py "work_pipeline/2_converted_tiffs/*_final.tiff" output.pdf --ppi 300.0
-
 import glob
 import io
 import img2pdf
 import argparse
 import sys
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfWriter
 from PIL import Image
 from natsort import natsorted
 
@@ -32,13 +28,18 @@ def build_pdf(image_pattern, output_pdf, target_ppi):
         print(f"Error during image conversion: {e}")
         return
 
-    # 3. Read into pypdf to fix dimensions
-    reader = PdfReader(pdf_stream)
-    writer = PdfWriter()
+    # 3. Read directly into PdfWriter using clone_from to satisfy pypdf 7.0+ requirements
+    try:
+        writer = PdfWriter(clone_from=pdf_stream)
+    except Exception as e:
+        print(f"Error initializing PDF writer: {e}")
+        return
 
     print(f"Scaling bounding boxes to exactly {target_ppi} PPI...")
     
-    for i, page in enumerate(reader.pages):
+    for i, page in enumerate(writer.pages):
+        if i >= len(image_paths):
+            break
         img_path = image_paths[i]
         
         with Image.open(img_path) as img:
@@ -49,10 +50,9 @@ def build_pdf(image_pattern, output_pdf, target_ppi):
         
         # Calculate scale factor based on width
         current_w_pt = float(page.mediabox.width)
-        scale_factor = target_w_pt / current_w_pt
-        
-        page.scale_by(scale_factor) 
-        writer.add_page(page)
+        if current_w_pt > 0:
+            scale_factor = target_w_pt / current_w_pt
+            page.scale_by(scale_factor)
 
     # 4. Save to disk
     with open(output_pdf, "wb") as f_out:
