@@ -1,4 +1,5 @@
-
+# Test artifacts
+Test/output_actual/
 
 # Image files
 work_pipeline/**
@@ -6,3 +7,4 @@ work_pipeline/**
 
 # Mac OS Temp
 **/.DS_Store
+Thumbs.db
